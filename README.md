@@ -1,4 +1,4 @@
-# Broth Microdilution Plate CNN — User Guide
+# AssiST — User Guide
 
 This guide explains how to prepare training images, train a convolutional neural network (CNN), optionally explore hyperparameters to choose an optimal configuration, and then infer **MIC** (minimum inhibitory concentration) and **MGC** (maximum growth concentration) from full-plate images.
 
