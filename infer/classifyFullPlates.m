@@ -42,10 +42,10 @@ platemapFileName = 'platemap.xlsx';
 dataFolder = './BMDimages/';
 
 % Name of mat file that contains the best network 
-netFileName = 'singleNetwork_2025-09-30.mat'; 
+netFileName = 'singleNetwork.mat'; 
 
 % Name of output mat file to hold outputs 
-resultsMatName = "resultsTest.mat"; % name of output variable 
+resultsMatName = "results.mat"; % name of output variable 
 
 % True if image needs to be flipped and rotated 90 degrees so A1 is top
 % left and H12 is bottom right 
