@@ -42,10 +42,10 @@ platemapFileName = 'platemap.xlsx';
 dataFolder = './BMDimages/';
 
 % Name of mat file that contains the best network 
-netFileName = '../train/2025-09-30_run/singleNetwork_2025-09-30.mat'; 
+netFileName = 'singleNetwork_2025-09-30.mat'; 
 
 % Name of output mat file to hold outputs 
-resultsMatName = "results2025-09-30.mat"; % name of output variable 
+resultsMatName = "resultsTest.mat"; % name of output variable 
 
 % True if image needs to be flipped and rotated 90 degrees so A1 is top
 % left and H12 is bottom right 
@@ -58,6 +58,11 @@ numNoGrowth = [1,2,3]; % number of classes corresponding to no growth
 numRestricted = [4,5]; % number of classes corresponding to restricted growth
 numFull = [6,7]; % number of classes corresponding to full growth
 
+% OPTIONAL: Flag wells with dubious classification
+% This is the confidence threshold for probability of class inference.
+% Anything below # will be flagged.
+pClassThreshold = nan; % Put # between 0-1.Put "nan" if you want no flag.
+ 
 %% Load data 
 % load the neural network classifier
 load(netFileName, 'net'); 
@@ -85,14 +90,13 @@ end
 phenotypeImg = cell(nFiles,6); % preallocate  
 drugMGCs = [];
 drugMICs = [];
-
 for iFile = 1:(nFiles)
     curFile = [dataFolder files(iFile).name];
     [~,curString,~] = fileparts(files(iFile).name);
     img = imread(curFile);
 
     % classify using neural network 
-    [wellCenters, wellNames, h,h1,phenotypes,phenotypesReclass, reClassWell, reClass, drugMGC, drugMIC, drugs]=inferPlatePhenotypes(img, curString, platemapFileName, net, tfFlip, tfRotate, numNoGrowth,numRestricted,numFull);
+    [wellCenters, wellNames, h,h1,phenotypes,phenotypesReclass, reClassWell, reClass, drugMGC, drugMIC, drugs, pClass]=inferPlatePhenotypes(img, curString, platemapFileName, net, tfFlip, tfRotate, numNoGrowth,numRestricted,numFull, pClassThreshold);
     close(h);close(h1);
     phenotypeImg{iFile, 1} = curString; 
     phenotypeImg{iFile, 2} = wellCenters;  
@@ -101,6 +105,7 @@ for iFile = 1:(nFiles)
     phenotypeImg{iFile, 5} = [reClassWell, reClass]; % storing if user needed to edit the phenotype
     phenotype96 = reshape(phenotypesReclass, 12,8)';
     phenotypeImg{iFile, 6} = phenotype96; % storing phenotypes in 96well format
+    phenotypeImg{iFile, 7} = pClass; % posterier probabilites per image
     if ~strcmp(platemapFileName, 'none')
         % MGC: storing concentration with maximum growth
         drugMGCs(:,iFile) = drugMGC;
