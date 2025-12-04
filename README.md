@@ -204,7 +204,7 @@ tfRotate = true;     % then 90° rotate
 % classes= [1_bubbles, 2_empty, 3_pellet_tiny, 4_cloud_small, 5_pellet_small, 6_cloud, 7_pellet]
 numNoGrowth = [1,2,3]; % number of classes corresponding to no growth 
 numRestricted = [4,5]; % number of classes corresponding to restricted growth
-numFull = [6,7]; % number of classes corresponding to full growth
+numFull = [6,7]; % number of classes corresponding to robust growth
 
 % OPTIONAL: Flag wells with dubious classification
 % This is the confidence threshold for probability of class inference.
@@ -299,14 +299,15 @@ classifyFullPlates
 - **Phenotype classes (# of classes):** visual growth patterns per well.  
 - **MIC (Minimum Inhibitory Concentration):** lowest concentration where **no growth** is observed.  
     - Determine based on the EUCAST guidelines
-      - bacteriocidal drugs:lowest concentration where **no full growth** is observed
-      - bacteriostatic drugs: 
-- **MGC (Maximum Growth Concentration):** highest concentration at which growth is **maximal**
+      - bacteriocidal drugs:lowest concentration where **any growth** (restricted or robust growth) is observed
+      - bacteriostatic drugs: lowest concentration where **no robust growth** is observed
+- **MGC (Maximum Growth Concentration):** highest concentration at which growth is **robust**
     - **If highest concentration well with growth is:**  
-        - **Classified as Full Growth** : concentration of highest concentration with full growth 
-        - **Classified as Restricted Growth** : concentration between lowest concentration with restricted growth and highest concentration with full growth
+        - **Classified as Robust Growth** : concentration of highest concentration with robust growth 
+        - **Classified as Restricted Growth** : concentration between lowest concentration with restricted growth and highest concentration with robust growth
 - **Skip:** will use well with concentration below skipped well to determine MIC and MGC
     -**Best practice** is to redo the broth microdilution for drug with skipped well
 ---
+
 
 
