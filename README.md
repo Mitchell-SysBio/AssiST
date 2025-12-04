@@ -205,6 +205,11 @@ tfRotate = true;     % then 90° rotate
 numNoGrowth = [1,2,3]; % number of classes corresponding to no growth 
 numRestricted = [4,5]; % number of classes corresponding to restricted growth
 numFull = [6,7]; % number of classes corresponding to full growth
+
+% OPTIONAL: Flag wells with dubious classification
+% This is the confidence threshold for probability of class inference.
+% Anything below # will be flagged.
+pClassThreshold = nan; % Put # between 0-1.Put "nan" if you want no flag.
 ```
 
 3) Run `classifyFullPlates.m`
@@ -214,8 +219,9 @@ The script will then:
 
 1. Compute well centers, crop each well, and classify it with your CNN (robust 50×50×1 input).  
 2. Render per‑well overlays (phenotype color and class index).  
-3. **Optionally reclassify** any wells via a modal dialog (see next section).  
-4. **Optional if valid platemap is provided:** Compute **MGC** (maximum growth concentration) and **MIC** (first concentration with no growth) per drug line, handling restricted growth and skip‑well cases.  
+3. **Optionally flag** any wells that have dubious classification
+4. **Optionally reclassify** any wells via a modal dialog (see next section).  
+5. **Optional if valid platemap is provided:** Compute **MGC** (maximum growth concentration) and **MIC** (first concentration with no growth) per drug line, handling restricted growth and skip‑well cases.  
 5. Export artifacts:  
    - **`PhenotypeImages/`** — per‑well phenotype overlays (after reclassification). 
    - **Optional if valid platemap is provided**  
@@ -292,6 +298,9 @@ classifyFullPlates
 
 - **Phenotype classes (# of classes):** visual growth patterns per well.  
 - **MIC (Minimum Inhibitory Concentration):** lowest concentration where **no growth** is observed.  
+    - Determine based on the EUCAST guidelines
+      - bacteriocidal drugs:lowest concentration where **no full growth** is observed
+      - bacteriostatic drugs: 
 - **MGC (Maximum Growth Concentration):** highest concentration at which growth is **maximal**
     - **If highest concentration well with growth is:**  
         - **Classified as Full Growth** : concentration of highest concentration with full growth 
@@ -299,4 +308,5 @@ classifyFullPlates
 - **Skip:** will use well with concentration below skipped well to determine MIC and MGC
     -**Best practice** is to redo the broth microdilution for drug with skipped well
 ---
+
 
