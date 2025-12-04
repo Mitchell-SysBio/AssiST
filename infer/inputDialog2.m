@@ -1,4 +1,4 @@
-function [reClassWell, reClass] = inputDialog2(myColorMap, numClasses)
+function [reClassWell, reClass] = inputDialog2(myColorMap, classNames)
 % inputDialog2 — Positioned UI for manual reclassification with a color key
 % Summary:
 %   Shows a COLOR KEY (swatches + labels) for the 7 classes, then collects
@@ -17,31 +17,12 @@ function [reClassWell, reClass] = inputDialog2(myColorMap, numClasses)
 
         promptTitle = 'Reclassify wells';
         position = [.7 .5 .3 .5]; % normalized
-
+    numClasses = numel(classNames);
     % Default outputs (in case of cancel/close)
     reClassWell = string.empty(1,0);
     reClass     = [];
 
     % === Color/key data (matches rest of pipeline) =======================
-    classNames = string(1:numClasses);
-    % classNames = [ ...
-    %     "1_bubbles"       ; ...
-    %     "2_empty"         ; ...
-    %     "3_pellet_tiny"   ; ...
-    %     "4_cloud_small"   ; ...
-    %     "5_pellet_small"  ; ...
-    %     "6_cloud"         ; ...
-    %     "7_pellet"        ];
-    % % RGB rows in [0..1], consistent with inferPlatePhenotypes/plots
-    % myColorMap = [ ...
-    %     0.0000 0.0000 0.0000;  ... % black (bubbles)
-    %     0.7882 0.0941 0.2902;  ... % red (empty)
-    %     1.0000 0.4588 0.5608;  ... % pink (pellet_tiny)
-    %     0.6549 0.7882 0.3412;  ... % light green (cloud_small)
-    %     0.5647 0.8784 0.9373;  ... % light blue (pellet_small)
-    %     0.0000 0.4471 0.0000;  ... % green (cloud)
-    %     0.0000 0.4667 0.7137];     % blue  (pellet)
-
     % Build modal UI at requested position
     fig = uifigure('Name', promptTitle, 'Visible', 'off');
     fig.CloseRequestFcn = @onCancel;
@@ -61,7 +42,7 @@ function [reClassWell, reClass] = inputDialog2(myColorMap, numClasses)
     gl.RowSpacing = 10;
 
     %% 1) COLOR KEY (swatches + labels)
-    panelKey = uipanel(gl, 'Title', 'Color key (class → color)');
+    panelKey = uipanel(gl, 'Title', sprintf('Color key (class → color)\n# in red = probability of incorrect classification<pClassThreshold%'));
     keyGrid  = uigridlayout(panelKey, [7, 2]);
     keyGrid.ColumnWidth = {30, '1x'};
     keyGrid.RowHeight   = repmat({'fit'}, 1, 7);
@@ -105,7 +86,7 @@ function [reClassWell, reClass] = inputDialog2(myColorMap, numClasses)
     ctrl = uigridlayout(ctrlPanel, [1,3]);
     ctrl.ColumnWidth = {'1x','fit','fit'};
 
-    tip = uilabel(ctrl, 'Text', 'Tip: leave both fields empty and press OK to skip reclassification.');
+    tip = uilabel(ctrl, 'Text', sprintf('Tip: Leave both fields empty and\npress OK to skip reclassification'));
     tip.FontColor = [0.4 0.4 0.4];
 
     cancelBtn = uibutton(ctrl, 'Text', 'Cancel', 'ButtonPushedFcn', @onCancel);
