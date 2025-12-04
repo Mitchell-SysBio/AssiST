@@ -1,4 +1,4 @@
-function [wellCenters, wellNames, h,h1,phenotypes,phenotypesReclass, reClassWell, reClass, drugMGC, drugMIC, drugs]=inferPlatePhenotypes(img, curString, platemapFileName, net, tfFlip, tfRotate, numNoGrowth,numRestricted,numFull)
+function [wellCenters, wellNames, h,h1,phenotypes,phenotypesReclass, reClassWell, reClass, drugMGC, drugMIC, drugs, pClass]=inferPlatePhenotypes(img, curString, platemapFileName, net, tfFlip, tfRotate, numNoGrowth,numRestricted,numFull, pClassThreshold)
 %% classifyPlatePhynotypesMICMGC.m — Derive MIC/MGC phenotypes from per-well predictions
 % Summary:
 %   Converts per-well class probabilities/predictions into drug response phenotypes,
@@ -20,11 +20,13 @@ function [wellCenters, wellNames, h,h1,phenotypes,phenotypesReclass, reClassWell
 %   net         DAG/Series          Trained network for classify()
 %   tfFlip/ tfRotate                rotate/flip flags
 %   numNoGrowth/numRestricted/numFull  number corresponding to each class for each growth type
+%   pClassThreshold    number corresponding to confidence threshold for probability of class inference
 %
 % Outputs:
 %  drugMGCMaxConc, drugMIC matrix      MGC & MIC call for each drug
 %  phenotypes              matrix      Encoded per-well phenotypes.
 %  phenotypesReclass       matrix      Post-manual reclassification phenotypes.
+%  pClass                  matrix      posterior probabilities of each class per image
 % 
 % Output Images:
 %  PhenotypeImages: phenotype color overlaid on plate after neural network classification
@@ -78,7 +80,7 @@ img2 = imresize(img2,resizeFactor);
 h = figure('color','w');
 movegui(h,"north")
 imshow(img2); hold on;
-title(curString);
+title(sprintf("%s - Mark the middle of well A1, THEN mark middle of well H12",curString), 'Interpreter','none');
 
 
 % Ask user to select the upper left and bottom right wells
@@ -115,8 +117,8 @@ end
 %% classifing individual wells
 l = radius*2;
 mask =strel('disk',radius,0);
-phenotypes = categorical([]); % place holder for phynotypes
-
+phenotypes = categorical([]); % place holder for phenotypes
+pClass = nan(96,numClasses);
 for i = 1:96
     rect = [wellCenters(i,1)-radius, wellCenters(i,2)-radius, l, l];
     curWellImage= imcrop(img2, rect);
@@ -126,7 +128,7 @@ for i = 1:96
     end
     img = im2single(imresize(curWellImage,[50 50]));
     img = reshape(img,[n_NN_input_layer n_NN_input_layer 1]); % resize image to match proportions of NN classifier
-    phenotypes(i) = classify(net, img);
+    [phenotypes(i),pClass(i,:)] = classify(net, img);
 end
 
 radius = radius*1.25;
@@ -139,14 +141,20 @@ for i=1:length(allPhenotypes)
             rectangle('Position', rect,'FaceColor', myColorMap(i,:),'FaceAlpha', myAlphaMap,'Curvature', [1, 1]);
             x = [rect(1), rect(1), rect(1) + rect(3), rect(1) + rect(3)];
             y = [rect(2), rect(2) + rect(4), rect(2) + rect(4), rect(2)];
-            
-            text(x(1),y(1),num2str(i),'BackgroundColor','w','Color','k');
+           
+            % Determine if classification is below the threshold
+            if isnan(pClassThreshold)
+                text(x(1),y(1),num2str(i),'BackgroundColor','w','Color','k');
+            elseif max(pClass(j,:))<pClassThreshold
+                text(x(1),y(1),num2str(i),'BackgroundColor','w','Color','r');
+            else
+                text(x(1),y(1),num2str(i),'BackgroundColor','w','Color','k');
+            end 
         end
     end
 end
-
 %% reclassify based on user input
-[reClassWell, reClass] = inputDialog2(myColorMap, numClasses);
+[reClassWell, reClass] = inputDialog2(myColorMap, net.Layers(end).Classes);
 phenotypesReclass = phenotypes;
 if ~isempty(reClass)
     newClass = reClass;
